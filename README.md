@@ -2,7 +2,7 @@
 Ce projet implémente un Order Book simple de ma conception. Il privilégie la rapidité d'execution.
 
 # Descritpion 
-Un carnet d'ordres (Order Book) stocke un ensemble d'ordre qui sont décrits par un id unique, un side (Buy ou Sell), un prix en Ticks et une quantity. Ce carnet d'ordre est pensé pour être utilisé plutôt côté marché et non côté stratégie.
+Un carnet d'ordres (Order Book) stocke un ensemble d'ordres qui sont décrits par un id unique, un side (Buy ou Sell), un prix en Ticks et une quantité. Ce carnet d'ordre est pensé pour être utiliser plutôt côté marché et non côté stratégie.
 
 # Cahier des charges
 Notre carnet d'ordres doit respecter les contraintes suivantes : 
@@ -19,7 +19,7 @@ Notre carnet d'ordres doit respecter les contraintes suivantes :
 
 # Roadmap
 Prochaines étapes : 
-- implémentation la fonction Cancel
+- implémentation de la fonction Cancel
 - testing approfondi de Add et Cancel avec des jeux de test
 - quantifier les complexités de Add et Cancel
 - implémentation de la fonction Execute
