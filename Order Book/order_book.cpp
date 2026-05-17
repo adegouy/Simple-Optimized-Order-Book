@@ -478,17 +478,23 @@ int main()
 {
     OrderBook* orders = new OrderBook();
     orders->add_order(Side::sell, 1, 3);
-    std::cout << orders->best_bid() << std::endl;
+    std::cout << orders->best_ask() << std::endl;
     orders->add_order(Side::sell, 1, 6);
-    std::cout << orders->best_bid() << std::endl;
+    std::cout << orders->best_ask() << std::endl;
     orders->add_order(Side::sell, 1, 5);
-    std::cout << orders->best_bid() << std::endl;
+    std::cout << orders->best_ask() << std::endl;
     orders->add_order(Side::sell, 1, 4);
-    std::cout << orders->best_bid() << std::endl;
+    std::cout << orders->best_ask() << std::endl;
     orders->add_order(Side::sell, 1, 2);
-    std::cout << orders->best_bid() << std::endl;
+    std::cout << orders->best_ask() << std::endl;
     orders->add_order(Side::sell, 1, 7);
-    std::cout << orders->best_bid() << std::endl;
+    std::cout << orders->best_ask() << std::endl; 
+
+    orders->add_order(Side::sell, 1, 9);
+    orders->add_order(Side::sell, 2, 9);
+    orders->add_order(Side::sell, 1, 9);
+
+    print_pricelevel_orders(std::cout, orders->sell_levels_tail); std::cout << std::endl;
 
     std::cout << *orders << std::endl;
 
