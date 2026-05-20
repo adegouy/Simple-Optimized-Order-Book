@@ -11,6 +11,7 @@
 using Quantity = uint64_t;
 using Price = uint64_t;
 using NbOrders = uint64_t;
+using OrderId = uint64_t;
 
 // sides d'ordres
 enum class Side : uint8_t {
@@ -22,7 +23,9 @@ enum class Side : uint8_t {
 enum class ErrorCode : uint8_t {
     no_error = 0,
     max_order_capacity = 1, 
-    max_price_capacity = 2
+    max_price_capacity = 2, 
+    id_already_used = 3, 
+    wrong_side = 4
 };
 
 // bornes de prix
@@ -81,30 +84,36 @@ struct OrderBook {
 
     // order pool
     Order pool[MAX_ORDERS] = {};
-    NbOrders next_order_id = 0;
+    //NbOrders next_order_id = 0;
 
     // constructeurs
     OrderBook() = default;  
 
     // ajoute un ordre O(1) amorti quand chaque niveau de prix est actif, retourne un code d'erreur
-    ErrorCode add_order(Side _side, Quantity _quantity, Price _price_tick) {
+    ErrorCode add_order(OrderId _id, Side _side, Quantity _quantity, Price _price_tick) {
         
         //capacité de la pool atteinte donc return 1
-        if (next_order_id >= MAX_ORDERS) return ErrorCode::max_order_capacity;
+        if (_id >= MAX_ORDERS) return ErrorCode::max_order_capacity;
 
         //prix au delà du prix max donc retourne 2
         if (_price_tick > MAX_PRICE_LEVEL) return ErrorCode::max_price_capacity;
+
+        //id déjà pris
+        if (pool[_id].side != Side::none) return ErrorCode::id_already_used;
+
+        //side incorrecte
+        if (_side != Side::buy && _side != Side::sell) return ErrorCode::wrong_side;
         
         //mettre l'ordre dans la pool à la main (vs une affectation par move plus lente à cause des checks)
-        pool[next_order_id].price_tick = _price_tick;
-        pool[next_order_id].quantity = _quantity;
-        pool[next_order_id].side = _side;
+        pool[_id].price_tick = _price_tick;
+        pool[_id].quantity = _quantity;
+        pool[_id].side = _side;
 
         //Buy
         if (_side == Side::buy) {
 
             //mise à jour du price level et du volume  
-            update_pricelevel_when_adding_buy_order(_price_tick, _quantity);
+            update_pricelevel_when_adding_buy_order(_id, _price_tick, _quantity);
 
             //mise à jour des pointeurs de PriceLevel, peut être en O(n) dans certains cas
             update_best_bid_when_adding_buy_order(_price_tick);
@@ -115,13 +124,12 @@ struct OrderBook {
         else if (_side == Side::sell) {
 
             //mise à jour du price level et du volume  
-            update_pricelevel_when_adding_sell_order(_price_tick, _quantity);
+            update_pricelevel_when_adding_sell_order(_id, _price_tick, _quantity);
 
             //mise à jour des pointeurs de PriceLevel, peut être en O(n) dans certains cas
             update_best_ask_when_adding_sell_order(_price_tick);
         }
 
-        next_order_id++;
         return ErrorCode::no_error;
     }
 
@@ -153,14 +161,14 @@ struct OrderBook {
     private:        
 
         //SELL ADD : On met à jour le PriceLevel et son Volume
-        inline void update_pricelevel_when_adding_sell_order(Price _price_tick, Quantity _quantity) {
+        inline void update_pricelevel_when_adding_sell_order(OrderId _id, Price _price_tick, Quantity _quantity) {
             
             // s'il n'y a aucun autre ordre à ce prix
             if (sell_levels[_price_tick].head == nullptr) {
 
                 // on met l'ordre dans la liste triée des niveaux de prix en guise de tête et de queue
-                sell_levels[_price_tick].head = &pool[next_order_id];
-                sell_levels[_price_tick].tail = &pool[next_order_id];
+                sell_levels[_price_tick].head = &pool[_id];
+                sell_levels[_price_tick].tail = &pool[_id];
 
                 // pas besoin de mettre à jour les pointeurs de la liste chainée d'ordres au sein du même PriceLevel car il est le seul ordre              
             }
@@ -169,11 +177,11 @@ struct OrderBook {
             else {
                 // on ajoute l'ordre à la queue de la liste d'ordres à ce même prix
                 Order* old_tail_ptr = sell_levels[_price_tick].tail;
-                sell_levels[_price_tick].tail = &pool[next_order_id];
+                sell_levels[_price_tick].tail = &pool[_id];
 
                 //on chaine les ordres
-                old_tail_ptr->next_in_price_level = &pool[next_order_id];
-                pool[next_order_id].prev_in_price_level = old_tail_ptr;
+                old_tail_ptr->next_in_price_level = &pool[_id];
+                pool[_id].prev_in_price_level = old_tail_ptr;
             }
 
             //mise à jour du volume 
@@ -256,14 +264,14 @@ struct OrderBook {
         }
 
         //BUY ADD : On met à jour le PriceLevel et son Volume
-        inline void update_pricelevel_when_adding_buy_order(Price _price_tick, Quantity _quantity) {
+        inline void update_pricelevel_when_adding_buy_order(OrderId _id, Price _price_tick, Quantity _quantity) {
 
             // s'il n'y a aucun autre ordre à ce prix
             if (buy_levels[_price_tick].head == nullptr) {
 
                 // on met l'ordre dans la liste triée des niveaux de prix en guise de tête et de queue
-                buy_levels[_price_tick].head = &pool[next_order_id];
-                buy_levels[_price_tick].tail = &pool[next_order_id];
+                buy_levels[_price_tick].head = &pool[_id];
+                buy_levels[_price_tick].tail = &pool[_id];
 
                 // pas besoin de mettre à jour les pointeurs de la liste chainée d'ordres au sein du même PriceLevel car il est le seul ordre              
             }
@@ -272,11 +280,11 @@ struct OrderBook {
             else {
                 // on ajoute l'ordre à la queue de la liste d'ordres à ce même prix
                 Order* old_tail_ptr = buy_levels[_price_tick].tail;
-                buy_levels[_price_tick].tail = &pool[next_order_id];
+                buy_levels[_price_tick].tail = &pool[_id];
 
                 //on chaine les ordres
-                old_tail_ptr->next_in_price_level = &pool[next_order_id];
-                pool[next_order_id].prev_in_price_level = old_tail_ptr;
+                old_tail_ptr->next_in_price_level = &pool[_id];
+                pool[_id].prev_in_price_level = old_tail_ptr;
             }
 
             //mise à jour du volume 
@@ -481,34 +489,56 @@ inline std::ostream& operator<<(std::ostream& os, const OrderBook& ob) {
     return os;
 }
 
+class OrderIdGenerator {
+    OrderId id = 0;
+
+public :
+    OrderIdGenerator() = default;
+
+    OrderId reset() {
+        OrderId old_id = id;
+        id = 0;
+        return old_id;
+    }
+
+    OrderId next() {
+        id++;
+        return id;
+    }
+};
+
 
 //###############################################
 //#                  M A I N                    #
 //###############################################
 int main()
 {
+
+    OrderIdGenerator id_gen;
+
     OrderBook* orders = new OrderBook();
-    orders->add_order(Side::sell, 1, 3);
+
+    orders->add_order(id_gen.next(), Side::sell, 1, 3);
     std::cout << orders->best_ask() << std::endl;
 
-    orders->add_order(Side::sell, 1, 6);
+    orders->add_order(id_gen.next(), Side::sell, 1, 6);
     std::cout << orders->best_ask() << std::endl;
 
-    orders->add_order(Side::sell, 1, 5);
+    orders->add_order(id_gen.next(), Side::sell, 1, 5);
     std::cout << orders->best_ask() << std::endl;
 
-    orders->add_order(Side::sell, 1, 4);
+    orders->add_order(id_gen.next(), Side::sell, 1, 4);
     std::cout << orders->best_ask() << std::endl;
 
-    orders->add_order(Side::sell, 1, 2);
+    orders->add_order(id_gen.next(), Side::sell, 1, 2);
     std::cout << orders->best_ask() << std::endl;
 
-    orders->add_order(Side::sell, 1, 7);
+    orders->add_order(id_gen.next(), Side::sell, 1, 7);
     std::cout << orders->best_ask() << std::endl; 
 
-    orders->add_order(Side::sell, 1, 9);
-    orders->add_order(Side::sell, 2, 9);
-    orders->add_order(Side::sell, 1, 9);
+    orders->add_order(id_gen.next(), Side::sell, 1, 9);
+    orders->add_order(id_gen.next(), Side::sell, 2, 9);
+    orders->add_order(id_gen.next(), Side::sell, 1, 9);
 
     print_pricelevel_orders(std::cout, orders->sell_levels_tail); std::cout << std::endl;
 
