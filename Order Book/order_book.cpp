@@ -31,6 +31,9 @@ constexpr Price MAX_PRICE_LEVEL = 10;
 // nombre d'ordres max 
 constexpr NbOrders MAX_ORDERS = 20;
 
+//###############################################
+//#                O R D E R                    #
+//###############################################
 struct Order {
     Price price_tick = 0;
     Quantity quantity = 0;
@@ -44,6 +47,9 @@ struct Order {
     Order() = default;
 };
 
+//###############################################
+//#           P R I C E   L E V E L             #
+//###############################################
 struct PriceLevel {
     Order* head = nullptr; //First In
     Order* tail = nullptr; //Last In
@@ -58,6 +64,9 @@ struct PriceLevel {
     PriceLevel() = default;
 };
 
+//###############################################
+//#            O R D E R   B O O K              #
+//###############################################
 //les ordres sont placés dans un memory pool indexé par id (accès par id = O(1))
 struct OrderBook {
     // buy
@@ -473,20 +482,27 @@ inline std::ostream& operator<<(std::ostream& os, const OrderBook& ob) {
 }
 
 
-
+//###############################################
+//#                  M A I N                    #
+//###############################################
 int main()
 {
     OrderBook* orders = new OrderBook();
     orders->add_order(Side::sell, 1, 3);
     std::cout << orders->best_ask() << std::endl;
+
     orders->add_order(Side::sell, 1, 6);
     std::cout << orders->best_ask() << std::endl;
+
     orders->add_order(Side::sell, 1, 5);
     std::cout << orders->best_ask() << std::endl;
+
     orders->add_order(Side::sell, 1, 4);
     std::cout << orders->best_ask() << std::endl;
+
     orders->add_order(Side::sell, 1, 2);
     std::cout << orders->best_ask() << std::endl;
+
     orders->add_order(Side::sell, 1, 7);
     std::cout << orders->best_ask() << std::endl; 
 
@@ -495,6 +511,8 @@ int main()
     orders->add_order(Side::sell, 1, 9);
 
     print_pricelevel_orders(std::cout, orders->sell_levels_tail); std::cout << std::endl;
+
+    std::cout << std::endl; std::cout << std::endl;
 
     std::cout << *orders << std::endl;
 
