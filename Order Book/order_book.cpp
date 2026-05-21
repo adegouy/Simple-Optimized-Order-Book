@@ -22,10 +22,11 @@ enum class Side : uint8_t {
 
 enum class ErrorCode : uint8_t {
     no_error = 0,
-    max_order_capacity = 1, 
-    max_price_capacity = 2, 
-    id_already_used = 3, 
-    wrong_side = 4
+    max_order_capacity = 1,
+    max_price_capacity = 2,
+    id_already_used = 3,
+    wrong_side = 4,
+    id_not_used = 5
 };
 
 // bornes de prix
@@ -134,26 +135,96 @@ struct OrderBook {
     }
 
     // cancel un ordre O(1)
-    //Todo
+    ErrorCode cancel(OrderId _id) {
+
+        //id dépasse le nombre max d'orders
+        if (_id >= MAX_ORDERS) return ErrorCode::max_order_capacity;
+
+        //aucun ordre à cet id
+        if (pool[_id].side == Side::none) return ErrorCode::id_not_used;
+
+        Order* order_ptr = &pool[_id];
+        Price price = order_ptr->price_tick;
+        Order* order_prev_ptr = order_ptr->prev_in_price_level;
+        Order* order_next_ptr = order_ptr->next_in_price_level;
+
+        // mettre à jour la file d'attente dans le price level
+        if (order_prev_ptr != nullptr) order_prev_ptr->next_in_price_level = order_next_ptr;
+        if (order_next_ptr != nullptr) order_next_ptr->prev_in_price_level = order_prev_ptr;
+
+        //Buy
+        if (order_ptr->side == Side::buy) {                         
+
+            // mettre à jour les volumes totaux du Price Level
+            buy_levels[price].total_quantity -= order_ptr->quantity;  
+
+            // mettre à jour les Best
+            if (buy_levels[price].total_quantity <= 0) {
+                
+                PriceLevel* price_level_prev_ptr = buy_levels[price].prev;
+                PriceLevel* price_level_next_ptr = buy_levels[price].next;
+
+                //mettre à jour les pointeurs
+                if (price_level_prev_ptr != nullptr) price_level_prev_ptr->next = price_level_next_ptr;
+                if (price_level_next_ptr != nullptr) price_level_next_ptr->prev = price_level_prev_ptr;
+
+                //mettre à jours les tête et queue
+                if (price == static_cast<Price>(buy_levels_head - buy_levels)) buy_levels_head = buy_levels[price].next;
+                if (price == static_cast<Price>(buy_levels_tail - buy_levels)) buy_levels_tail = buy_levels[price].prev;
+            }            
+
+        }
+
+        //Sell
+        else if (order_ptr->side == Side::sell) {
+
+            // mettre à jour les volumes totaux du Price Level
+            sell_levels[price].total_quantity -= order_ptr->quantity;
+
+            // mettre à jour les Best
+            if (sell_levels[price].total_quantity <= 0) {
+
+                PriceLevel* price_level_prev_ptr = sell_levels[price].prev;
+                PriceLevel* price_level_next_ptr = sell_levels[price].next;
+
+                //mettre à jour les pointeurs
+                if (price_level_prev_ptr != nullptr) price_level_prev_ptr->next = price_level_next_ptr;
+                if (price_level_next_ptr != nullptr) price_level_next_ptr->prev = price_level_prev_ptr;
+
+                //mettre à jours les tête et queue
+                if (price == static_cast<Price>(sell_levels_head - sell_levels)) sell_levels_head = sell_levels[price].next;
+                if (price == static_cast<Price>(sell_levels_tail - sell_levels)) sell_levels_tail = sell_levels[price].prev;
+            }
+        }
+
+        //Supprimer l'ordre
+        pool[_id].price_tick = 0;
+        pool[_id].quantity = 0;
+        pool[_id].side = Side::none;
+
+        return ErrorCode::no_error;
+    }
 
     // best bid O(1)
-    Price best_bid() {
+    //Todo retourner une erreur ou autre quand il n'y a pas de best (si vide)
+    Price best_bid() const {
         if (buy_levels_tail == nullptr) return 0;
         return static_cast<Price>(buy_levels_tail - buy_levels);
     }
 
-    Price worst_bid() {
+    Price worst_bid() const {
         if (buy_levels_head == nullptr) return 0;
         return static_cast<Price>(buy_levels_head - buy_levels);
     }
 
     // best ask O(1)
-    Price best_ask() {
+    //Todo retourner une erreur ou autre quand il n'y a pas de best (si vide)
+    Price best_ask() const {
         if (sell_levels_head == nullptr) return 0;
         return static_cast<Price>(sell_levels_head - sell_levels);
     }
 
-    Price worst_ask() {
+    Price worst_ask() const {
         if (sell_levels_tail == nullptr) return 0;
         return static_cast<Price>(sell_levels_tail - sell_levels);
     }
@@ -424,6 +495,10 @@ inline std::ostream& operator<<(std::ostream& os, const OrderBook& ob) {
 
     size_t max_rows = std::max(pool_rows, price_rows);
 
+    os << "#################################################################" << std::endl;
+    os << "#                      O R D E R   B O O K                      #" << std::endl;
+    os << "#################################################################" << std::endl;
+
     //fonction pour tronquer
     auto truncate = [](const std::string& s) {
         constexpr size_t W = COL_WIDTH;
@@ -486,6 +561,17 @@ inline std::ostream& operator<<(std::ostream& os, const OrderBook& ob) {
         if (row + 1 < max_rows) os << std::endl;
     }
 
+    // Ligne finale avec Best bid / Best ask alignée sous les colonnes
+    os << std::endl;
+  
+    std::string best_bid_str = "Best bid = " + std::to_string(ob.best_bid());
+    std::string best_ask_str = "Best ask = " + std::to_string(ob.best_ask());
+
+    // imprimer colonne Pool vide, puis Best bid et Best ask
+    os << std::left << std::setw(static_cast<int>(COL_WIDTH)) << std::string()
+       << std::left << std::setw(static_cast<int>(COL_WIDTH)) << best_bid_str
+       << std::left << std::setw(static_cast<int>(COL_WIDTH)) << best_ask_str;
+
     return os;
 }
 
@@ -540,9 +626,16 @@ int main()
     orders->add_order(id_gen.next(), Side::sell, 2, 9);
     orders->add_order(id_gen.next(), Side::sell, 1, 9);
 
+    OrderId test_id = id_gen.next();
+    orders->add_order(test_id, Side::sell, 1, 9);
+
     print_pricelevel_orders(std::cout, orders->sell_levels_tail); std::cout << std::endl;
 
     std::cout << std::endl; std::cout << std::endl;
+
+    std::cout << *orders << std::endl;
+
+    orders->cancel(test_id);
 
     std::cout << *orders << std::endl;
 
