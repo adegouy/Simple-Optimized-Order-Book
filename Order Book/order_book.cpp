@@ -138,7 +138,7 @@ struct OrderBook {
     ErrorCode cancel(OrderId _id) {
 
         //id dépasse le nombre max d'orders
-        if (_id >= MAX_ORDERS) return ErrorCode::max_order_capacity;
+        if (_id > MAX_ORDERS-1) return ErrorCode::max_order_capacity;
 
         //aucun ordre à cet id
         if (pool[_id].side == Side::none) return ErrorCode::id_not_used;
@@ -227,6 +227,21 @@ struct OrderBook {
     Price worst_ask() const {
         if (sell_levels_tail == nullptr) return 0;
         return static_cast<Price>(sell_levels_tail - sell_levels);
+    }
+
+    Price get_price(OrderId _id) {
+        if (_id > MAX_ORDERS - 1) return 0;
+        return pool[_id].price_tick;
+    }
+
+    Quantity get_quantity(OrderId _id) {
+        if (_id > MAX_ORDERS - 1) return 0;
+        return pool[_id].quantity;
+    }
+
+    Side get_side(OrderId _id) {
+        if (_id > MAX_ORDERS - 1) return Side::none;
+        return pool[_id].side;
     }
 
     private:        
