@@ -2,7 +2,7 @@
 Ce projet implémente un Order Book simple de ma conception. Il est optimisé pour la rapidité d'execution.
 
 # Descritpion 
-Un carnet d'ordres (Order Book) stocke un ensemble d'ordres qui sont décrits par un id unique, un side (Buy ou Sell), un prix en Ticks et une quantité. Ce carnet d'ordre est pensé pour être utilisé côté marché.
+Un carnet d'ordres (Order Book) stocke un ensemble d'ordres qui sont décrits par un id unique, un side (Buy ou Sell), un prix en Ticks, une quantité et un userid. Ce carnet d'ordre est pensé pour être utilisé côté marché.
 
 # Cahier des charges
 Notre carnet d'ordres doit respecter les contraintes suivantes : 
@@ -23,7 +23,8 @@ Prochaines étapes :
 - testing approfondi de Add et Cancel avec des jeux de test
 - quantifier les complexités de Add et Cancel
 - ajouter un Trade Repository afin de stocker les trades une fois executés
-- implémentation de la fonction Execute 
+- implémentation de la fonction Execute
+- OrderBook::get_volume(Price, Side);
 
 # Analyse des complexités
 ## Complexité algorithmique
