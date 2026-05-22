@@ -26,30 +26,32 @@ int main(){
 
     OrderBook* orders = new OrderBook();
 
-    orders->add_order(id_gen.next(), Side::sell, 1, 3);
+    UserId client1 = 111;
+
+    orders->add(client1, id_gen.next(), Side::sell, 1, 3);
     std::cout << orders->best_ask() << std::endl;
 
-    orders->add_order(id_gen.next(), Side::sell, 1, 6);
+    orders->add(client1, id_gen.next(), Side::sell, 1, 6);
     std::cout << orders->best_ask() << std::endl;
 
-    orders->add_order(id_gen.next(), Side::sell, 1, 5);
+    orders->add(client1, id_gen.next(), Side::sell, 1, 5);
     std::cout << orders->best_ask() << std::endl;
 
-    orders->add_order(id_gen.next(), Side::sell, 1, 4);
+    orders->add(client1, id_gen.next(), Side::sell, 1, 4);
     std::cout << orders->best_ask() << std::endl;
 
-    orders->add_order(id_gen.next(), Side::sell, 1, 2);
+    orders->add(client1, id_gen.next(), Side::sell, 1, 2);
     std::cout << orders->best_ask() << std::endl;
 
-    orders->add_order(id_gen.next(), Side::sell, 1, 7);
+    orders->add(client1, id_gen.next(), Side::sell, 1, 7);
     std::cout << orders->best_ask() << std::endl;
 
-    orders->add_order(id_gen.next(), Side::sell, 1, 9);
-    orders->add_order(id_gen.next(), Side::sell, 2, 9);
-    orders->add_order(id_gen.next(), Side::sell, 1, 9);
+    orders->add(client1, id_gen.next(), Side::sell, 1, 9);
+    orders->add(client1, id_gen.next(), Side::sell, 2, 9);
+    orders->add(client1, id_gen.next(), Side::sell, 1, 9);
 
     OrderId test_id = id_gen.next();
-    orders->add_order(test_id, Side::sell, 1, 9);
+    orders->add(client1, test_id, Side::sell, 1, 9);
 
     print_pricelevel_orders(std::cout, orders->get_sell_price_levels_tail()); std::cout << std::endl;
 

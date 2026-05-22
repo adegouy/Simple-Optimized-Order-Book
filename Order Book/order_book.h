@@ -12,6 +12,8 @@ using Quantity = uint64_t;
 using Price = uint64_t;
 using NbOrders = uint64_t;
 using OrderId = uint64_t;
+using UserId = uint64_t;
+using NbTrades = uint64_t;
 
 // sides d'ordres
 enum class Side : uint8_t {
@@ -35,6 +37,9 @@ constexpr Price MAX_PRICE_LEVEL = 10;
 // nombre d'ordres max 
 constexpr NbOrders MAX_ORDERS = 20;
 
+// nombre de trades max
+constexpr NbTrades MAX_TRADES = 30;
+
 //###############################################
 //#                O R D E R                    #
 //###############################################
@@ -42,6 +47,7 @@ class Order {
     Price price_tick = 0;
     Quantity quantity = 0;
     Side side = Side::none;
+    UserId user_id = 0;
 
     //chainage au sein du même Price Level
     Order* prev_in_price_level = nullptr;
@@ -60,6 +66,7 @@ public:
     Side get_side() const;
     const Order* get_prev_in_price_level() const;
     const Order* get_next_in_price_level() const;
+    UserId get_user_id() const;
 
 };
 
@@ -94,6 +101,27 @@ public:
 };
 
 //###############################################
+//#                 T R A D E                   #
+//###############################################
+class Trade {
+    OrderId buy_id = 0;    
+    UserId buy_user_id = 0;
+
+    OrderId sell_id = 0;
+    UserId sell_user_id = 0;
+
+    Quantity quantity = 0;
+    Price price_tick = 0;
+};
+
+//###############################################
+//#       T R A D E   R E P O S I T O R Y       #
+//###############################################
+class TradeRepository {
+    Trade trades[MAX_TRADES] = {};
+};
+
+//###############################################
 //#            O R D E R   B O O K              #
 //###############################################
 //les ordres sont placés dans un memory pool indexé par id (accès par id = O(1))
@@ -118,10 +146,12 @@ public:
     OrderBook() = default;
 
     // ajoute un ordre O(1) amorti quand chaque niveau de prix est actif, retourne un code d'erreur
-    ErrorCode add_order(OrderId _id, Side _side, Quantity _quantity, Price _price_tick);
+    ErrorCode add(UserId _user_id, OrderId _id, Side _side, Quantity _quantity, Price _price_tick);
 
     // cancel un ordre O(1)
     ErrorCode cancel(OrderId _id);
+
+    // execute TODO -> ajoute dans le TradeRepository les trades correspondants au macthing du best_bid avec 1 ou plusieurs best_ask
 
     // best bid O(1)
     //Todo retourner une erreur ou autre quand il n'y a pas de best (si vide)
@@ -142,7 +172,10 @@ public:
 
     Side get_side(OrderId _id) const;
 
+    UserId get_user_id(OrderId _id) const;
+
     const Order* get_order(OrderId _id) const;
+
     const PriceLevel* get_sell_price_level(Price _price) const;
     const PriceLevel* get_buy_price_level(Price _price) const;
 

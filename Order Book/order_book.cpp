@@ -31,6 +31,10 @@ const Order* Order::get_next_in_price_level() const {
     return next_in_price_level;
 }
 
+UserId Order::get_user_id() const {
+    return user_id;
+}
+
 //###############################################
 //#           P R I C E   L E V E L             #
 //###############################################
@@ -60,7 +64,7 @@ const PriceLevel* PriceLevel::get_next() const {
 //###############################################
 
 // ajoute un ordre O(1) amorti quand chaque niveau de prix est actif, retourne un code d'erreur
-ErrorCode OrderBook::add_order(OrderId _id, Side _side, Quantity _quantity, Price _price_tick) {
+ErrorCode OrderBook::add(UserId _user_id, OrderId _id, Side _side, Quantity _quantity, Price _price_tick) {
 
     //capacité de la pool atteinte donc return 1
     if (_id >= MAX_ORDERS) return ErrorCode::max_order_capacity;
@@ -78,6 +82,7 @@ ErrorCode OrderBook::add_order(OrderId _id, Side _side, Quantity _quantity, Pric
     pool[_id].price_tick = _price_tick;
     pool[_id].quantity = _quantity;
     pool[_id].side = _side;
+    pool[_id].user_id = _user_id;
 
     //Buy
     if (_side == Side::buy) {
@@ -170,6 +175,7 @@ ErrorCode OrderBook::cancel(OrderId _id) {
     pool[_id].price_tick = 0;
     pool[_id].quantity = 0;
     pool[_id].side = Side::none;
+    pool[_id].user_id = 0;
 
     return ErrorCode::no_error;
 }
@@ -211,6 +217,11 @@ Quantity OrderBook::get_quantity(OrderId _id) const {
 Side OrderBook::get_side(OrderId _id) const {
     if (_id > MAX_ORDERS - 1) return Side::none;
     return pool[_id].side;
+}
+
+UserId OrderBook::get_user_id(OrderId _id) const {
+    if (_id > MAX_ORDERS - 1) return 0;
+    return pool[_id].user_id;
 }
 
 const Order* OrderBook::get_order(OrderId _id) const {
