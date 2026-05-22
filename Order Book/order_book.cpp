@@ -38,7 +38,7 @@ constexpr NbOrders MAX_ORDERS = 20;
 //###############################################
 //#                O R D E R                    #
 //###############################################
-struct Order {
+class Order {
     Price price_tick = 0;
     Quantity quantity = 0;
     Side side = Side::none;
@@ -49,12 +49,39 @@ struct Order {
 
     // constructeurs
     Order() = default;
+
+    friend class OrderBook;
+
+public:
+
+    // getters
+
+    Price get_price_tick() const { 
+        return price_tick; 
+    }
+
+    Quantity get_quantity() const { 
+        return quantity;
+    }
+
+    Side get_side() const { 
+        return side; 
+    }
+
+    const Order* get_prev_in_price_level () const {
+        return prev_in_price_level;
+    }
+
+    const Order* get_next_in_price_level () const {
+        return next_in_price_level;
+    }
+
 };
 
 //###############################################
 //#           P R I C E   L E V E L             #
 //###############################################
-struct PriceLevel {
+class PriceLevel {
     Order* head = nullptr; //First In
     Order* tail = nullptr; //Last In
 
@@ -65,7 +92,33 @@ struct PriceLevel {
     Quantity total_quantity = 0; //volume
 
     // constructeurs
-    PriceLevel() = default;
+    PriceLevel() = default;    
+
+    friend class OrderBook;
+
+public:
+
+    // getters
+
+    Quantity get_volume() const {
+        return total_quantity;
+    }
+   
+    const Order* get_head() const { 
+        return head; }
+  
+    const Order* get_tail() const { 
+        return tail; 
+    }   
+
+    const PriceLevel* get_prev() const { 
+        return prev; 
+    }
+
+    const PriceLevel* get_next() const { 
+        return next; 
+    }
+
 };
 
 //###############################################
@@ -229,17 +282,17 @@ struct OrderBook {
         return static_cast<Price>(sell_levels_tail - sell_levels);
     }
 
-    Price get_price(OrderId _id) {
+    Price get_price(OrderId _id) const {
         if (_id > MAX_ORDERS - 1) return 0;
         return pool[_id].price_tick;
     }
 
-    Quantity get_quantity(OrderId _id) {
+    Quantity get_quantity(OrderId _id) const {
         if (_id > MAX_ORDERS - 1) return 0;
         return pool[_id].quantity;
     }
 
-    Side get_side(OrderId _id) {
+    Side get_side(OrderId _id) const {
         if (_id > MAX_ORDERS - 1) return Side::none;
         return pool[_id].side;
     }
@@ -455,30 +508,30 @@ struct OrderBook {
 
 // Affichage d'un ordre au format "[Side Quantity @ PriceTick EUR]"
 inline std::ostream& operator<<(std::ostream& os, const Order& o) {
-    if (o.side == Side::none) {
+    if (o.get_side() == Side::none) {
         os << "---";
         return os;
     }
 
     const char* side_str = "NONE";
-    switch (o.side) {
+    switch (o.get_side()) {
         case Side::buy:  side_str = "BUY";  break;
         case Side::sell: side_str = "SELL"; break;
         default:         side_str = "NONE"; break;
     }
 
-    os << '[' << side_str << ' ' << o.quantity << " @ " << o.price_tick << " EUR]";
+    os << '[' << side_str << ' ' << o.get_quantity() << " @ " << o.get_price_tick() << " EUR]";
     return os;
 }
 
 // Affichage d'un PriceLevel au format "[Volume=vol]"
 inline std::ostream& operator<<(std::ostream& os, const PriceLevel& pl) {
-    if (pl.total_quantity == 0) {
+    if (pl.get_volume() == 0) {
         os << "---";
         return os;
     }
 
-    os << "[Volume=" << pl.total_quantity << "]";
+    os << "[Volume=" << pl.get_volume() << "]";
     return os;
 }
 
@@ -487,14 +540,14 @@ inline std::ostream& operator<<(std::ostream& os, const PriceLevel& pl) {
 inline void print_pricelevel_orders(std::ostream& os, const PriceLevel* pl) {
     if (pl == nullptr) return;
     // n'affiche que si actif et non vide
-    if (pl->head == nullptr) return;
+    if (pl->get_head() == nullptr) return;
 
     os << "HEAD <- ";
-    Order* cur = pl->head;
+    const Order* cur = pl->get_head();
     while (cur != nullptr) {
         os << *cur; // utilise l'opérateur<< déjà défini pour Order
-        if (cur->next_in_price_level != nullptr) os << " <- ";
-        cur = cur->next_in_price_level;
+        if (cur->get_next_in_price_level() != nullptr) os << " <- ";
+        cur = cur->get_next_in_price_level();
     }
     os << " <- TAIL";
 }
