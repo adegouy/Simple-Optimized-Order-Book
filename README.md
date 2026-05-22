@@ -21,7 +21,7 @@ Notre carnet d'ordres doit respecter les contraintes suivantes :
 # Roadmap
 Prochaines étapes : 
 - implémentation de la fonction Cancel -> DONE
-- Accès à un ordre en O(1)
+- Accès à un ordre en O(1) -> DONE
 - testing approfondi de Add et Cancel avec des jeux de test
 - quantifier les complexités de Add et Cancel
 - implémentation de la fonction Execute
