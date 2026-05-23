@@ -14,6 +14,7 @@ using NbOrders = uint64_t;
 using OrderId = uint64_t;
 using UserId = uint64_t;
 using NbTrades = uint64_t;
+using TradeId = uint64_t;
 
 // sides d'ordres
 enum class Side : uint8_t {
@@ -28,7 +29,11 @@ enum class ErrorCode : uint8_t {
     max_price_capacity = 2,
     id_already_used = 3,
     wrong_side = 4,
-    id_not_used = 5
+    id_not_used = 5,
+    max_trade_capacity = 6,
+    no_best_bid = 7,
+    no_best_ask = 8,
+    no_match = 9
 };
 
 // bornes de prix
@@ -38,7 +43,7 @@ constexpr Price MAX_PRICE_LEVEL = 10;
 constexpr NbOrders MAX_ORDERS = 20;
 
 // nombre de trades max
-constexpr NbTrades MAX_TRADES = 30;
+constexpr NbTrades MAX_TRADES = 10;
 
 //###############################################
 //#                O R D E R                    #
@@ -83,7 +88,7 @@ class PriceLevel {
 
     Quantity total_quantity = 0; //volume
 
-    // constructeurs
+    // constructeur
     PriceLevel() = default;
 
     friend class OrderBook;
@@ -111,7 +116,22 @@ class Trade {
     UserId sell_user_id = 0;
 
     Quantity quantity = 0;
-    Price price_tick = 0;
+    Price price_tick = 0;    
+
+    // constructeur
+    Trade() = default;
+
+    friend class TradeRepository;
+
+public:
+    // getters
+    OrderId get_buy_id() const { return buy_id; }
+    UserId get_buy_user_id() const { return buy_user_id; }
+    OrderId get_sell_id() const { return sell_id; }
+    UserId get_sell_user_id() const { return sell_user_id; }
+    Quantity get_quantity() const { return quantity; }
+    Price get_price_tick() const { return price_tick; }
+
 };
 
 //###############################################
@@ -119,6 +139,18 @@ class Trade {
 //###############################################
 class TradeRepository {
     Trade trades[MAX_TRADES] = {};
+
+    TradeId next_id = 0;
+
+    ErrorCode add(OrderId _buy_id, UserId _buy_user_id, OrderId _sell_id, UserId _sell_user_id, Quantity _quantity, Price _price_tick);
+
+    const Trade* get_trade(TradeId _id) const;
+
+    friend class OrderBook;
+    friend std::ostream& operator<<(std::ostream& os, const TradeRepository& tr);
+
+public :
+    TradeRepository() = default;
 };
 
 //###############################################
@@ -138,12 +170,14 @@ class OrderBook {
 
     // order pool
     Order pool[MAX_ORDERS] = {};
-    //NbOrders next_order_id = 0;
+    
+    TradeRepository* trades = nullptr;
 
 public:
 
     // constructeurs
     OrderBook() = default;
+    OrderBook(TradeRepository* _trades);
 
     // ajoute un ordre O(1) amorti quand chaque niveau de prix est actif, retourne un code d'erreur
     ErrorCode add(UserId _user_id, OrderId _id, Side _side, Quantity _quantity, Price _price_tick);
@@ -152,6 +186,7 @@ public:
     ErrorCode cancel(OrderId _id);
 
     // execute TODO -> ajoute dans le TradeRepository les trades correspondants au macthing du best_bid avec 1 ou plusieurs best_ask
+    ErrorCode execute();
 
     // best bid O(1)
     //Todo retourner une erreur ou autre quand il n'y a pas de best (si vide)
@@ -214,4 +249,10 @@ void print_pricelevel_orders(std::ostream& os, const PriceLevel* pl);
 
 // Affichage de l'OrderBook : 3 colonnes côte à côte : pool | buy levels | sell levels
 std::ostream& operator<<(std::ostream& os, const OrderBook& ob);
+
+// Affichage d'un Trade au format "<buy_user_id> bought <qty>lots @ <price_ticks> EUR to <sell_user_id>"
+std::ostream& operator<<(std::ostream& os, const Trade& t);
+
+// Affichage d'un TradeRepository
+std::ostream& operator<<(std::ostream& os, const TradeRepository& tr);
 

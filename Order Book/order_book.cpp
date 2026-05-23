@@ -60,8 +60,44 @@ const PriceLevel* PriceLevel::get_next() const {
 }
 
 //###############################################
+//#                 T R A D E                   #
+//###############################################
+
+
+
+//###############################################
+//#       T R A D E   R E P O S I T O R Y       #
+//###############################################
+
+ErrorCode TradeRepository::add(OrderId _buy_id, UserId _buy_user_id, OrderId _sell_id, UserId _sell_user_id, Quantity _quantity, Price _price_tick) {
+
+    if (next_id > MAX_TRADES - 1) return ErrorCode::max_trade_capacity;
+
+    trades[next_id].buy_id = _buy_id;
+    trades[next_id].buy_user_id = _buy_user_id;
+    trades[next_id].sell_id = _sell_id;
+    trades[next_id].sell_user_id = _sell_user_id;
+    trades[next_id].quantity = _quantity;
+    trades[next_id].price_tick = _price_tick;
+
+    next_id++;
+
+    return ErrorCode::no_error;
+}
+
+const Trade* TradeRepository::get_trade(TradeId _id) const {
+    if (_id > MAX_TRADES - 1) return nullptr;
+
+    return &trades[_id];
+}
+
+//###############################################
 //#            O R D E R   B O O K              #
 //###############################################
+
+OrderBook::OrderBook(TradeRepository* _trades) {
+    trades = _trades;
+}
 
 // ajoute un ordre O(1) amorti quand chaque niveau de prix est actif, retourne un code d'erreur
 ErrorCode OrderBook::add(UserId _user_id, OrderId _id, Side _side, Quantity _quantity, Price _price_tick) {
@@ -176,6 +212,102 @@ ErrorCode OrderBook::cancel(OrderId _id) {
     pool[_id].quantity = 0;
     pool[_id].side = Side::none;
     pool[_id].user_id = 0;
+
+    return ErrorCode::no_error;
+}
+
+// execute TODO -> ajoute dans le TradeRepository les trades correspondants au macthing du best_bid avec 1 ou plusieurs best_ask
+//si le trade repos est nullptr alors le trade est quand même executé mais n'est pas loggé
+ErrorCode OrderBook::execute() {
+
+    //Récupérer le best bid price
+    PriceLevel* best_bid_price = buy_levels_tail;
+    if (best_bid_price == nullptr) return ErrorCode::no_best_bid;
+
+    //Récupérer le best bid first order dans la FIFO
+    Order* best_bid = best_bid_price->head;
+    if (best_bid == nullptr) return ErrorCode::no_best_bid;  
+
+    Quantity bid_remaining_qty = best_bid->quantity;
+
+    //faire
+    do{     
+
+        //Récupérer le best ask Price
+        PriceLevel* best_ask_price = sell_levels_head;
+        if (best_ask_price == nullptr) return ErrorCode::no_best_ask;
+
+        //Récupérer le best ask first order dans la FIFO
+        Order* best_ask = best_ask_price->head;
+        if (best_ask == nullptr) return ErrorCode::no_best_ask;
+
+        //std::cout << "best bid = " << best_bid->price_tick << std::endl;
+        //std::cout << "best ask = " << best_ask->price_tick << std::endl;
+     
+        // si best bid >= best ask alors il y a un match
+        if (best_bid->price_tick >= best_ask->price_tick) {
+            //  si bid qty >= ask qty
+            if (best_bid->quantity >= best_ask->quantity){
+                //si le trade repo existe alors on log le trade (qty = celle du ask, prix du ask)      
+                if (trades != nullptr) {
+                    ErrorCode err = trades->add(static_cast<OrderId>(best_bid - pool),
+                                best_bid->user_id,
+                                static_cast<OrderId>(best_ask - pool),
+                                best_ask->user_id,
+                                best_ask->quantity,
+
+                                best_ask->price_tick);
+                    if (err != ErrorCode::no_error) return err;
+                }
+
+                Quantity ask_qty = best_ask->quantity;
+
+                //cancel le best ask
+                cancel(static_cast<OrderId>(best_ask - pool));
+
+                //soustraire la qty du ask au best bid
+                bid_remaining_qty -= ask_qty;                
+                best_bid->quantity -= ask_qty;
+                best_bid_price->total_quantity -= ask_qty;
+
+                // si qty du bid == 0 on cancel le best bid 
+                if (bid_remaining_qty == 0) cancel(static_cast<OrderId>(best_bid - pool));
+            
+            }
+        
+            // sinon ça veut dire que bid qty < ask qty
+            else{               
+
+                //si le trade repo existe alors on log le trade (qty = celle du bid, prix du ask)
+                if (trades != nullptr) {
+                    ErrorCode err = trades->add(static_cast<OrderId>(best_bid - pool),
+                        best_bid->user_id,
+                        static_cast<OrderId>(best_ask - pool),
+                        best_ask->user_id,
+                        best_bid->quantity,
+                        best_ask->price_tick);
+                
+                    if (err != ErrorCode::no_error) return err;
+                }
+            
+                //cancel le best bid
+                //std::cout << "test" << std::endl;
+                cancel(static_cast<OrderId>(best_bid - pool));
+                
+                //Soustraire la qty du bid au best ask
+                best_ask->quantity -= bid_remaining_qty;
+                best_ask_price->total_quantity -= bid_remaining_qty;                
+
+                //mettre qty bid à 0
+                bid_remaining_qty = 0;
+            }
+            
+        }
+        // sinon c'est qu'il n'y a plus de match possible
+        else return ErrorCode::no_match;
+
+    //on recommence tant que la qty restante du best buy > 0
+    } while (bid_remaining_qty > 0);    
 
     return ErrorCode::no_error;
 }
@@ -600,3 +732,23 @@ std::ostream& operator<<(std::ostream& os, const OrderBook& ob) {
 
     return os;
 }
+
+// Affichage d'un Trade au format "<buy_user_id> bought <qty>lots @ <price_ticks> EUR to <sell_user_id>"
+std::ostream& operator<<(std::ostream& os, const Trade& t) {
+    os << t.get_buy_user_id() << " bought " << t.get_quantity() << " lots @ " << t.get_price_tick() << " EUR to " << t.get_sell_user_id();
+    return os;
+}
+
+// Affichage d'un TradeRepository
+std::ostream& operator<<(std::ostream& os, const TradeRepository& tr) {
+    os << "-- [ TRADE REPOSITORY ] --" << std::endl;
+    for (TradeId i = 0; i < MAX_TRADES; ++i) {
+        os << i << ": ";
+        const Trade* t = tr.get_trade(i);
+        if (t == nullptr || t->get_quantity() == 0) os << "---";
+        else os << *t;
+        if (i + 1 < MAX_TRADES) os << std::endl;
+    }
+    return os;
+}
+
