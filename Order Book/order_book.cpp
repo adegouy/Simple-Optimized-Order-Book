@@ -610,7 +610,7 @@ std::ostream& operator<<(std::ostream& os, const Order& o) {
     default:         side_str = "NONE"; break;
     }
 
-    os << '[' << side_str << ' ' << o.get_quantity() << " @ " << o.get_price_tick() << " EUR]";
+    os << "[User " << o.get_user_id() << ' ' << side_str << ' ' << o.get_quantity() << " @ " << o.get_price_tick() << " EUR]";
     return os;
 }
 
@@ -645,7 +645,7 @@ void print_pricelevel_orders(std::ostream& os, const PriceLevel* pl) {
 // Affichage de l'OrderBook : 3 colonnes côte à côte : pool | buy levels | sell levels
 std::ostream& operator<<(std::ostream& os, const OrderBook& ob) {
     // on fixe la taille des colonnes
-    constexpr size_t COL_WIDTH = 22;
+    constexpr size_t COL_WIDTH = 34;
 
     //on calcule le nombre de lignes max
     size_t pool_rows = 1 + MAX_ORDERS; // header + taille de la pool
@@ -653,9 +653,9 @@ std::ostream& operator<<(std::ostream& os, const OrderBook& ob) {
 
     size_t max_rows = std::max(pool_rows, price_rows);
 
-    os << "#################################################################" << std::endl;
-    os << "#                      O R D E R   B O O K                      #" << std::endl;
-    os << "#################################################################" << std::endl;
+    os << "#####################################################################################################" << std::endl;
+    os << "#                                        O R D E R   B O O K                                        #" << std::endl;
+    os << "#####################################################################################################" << std::endl;
 
     //fonction pour tronquer
     auto truncate = [](const std::string& s) {
@@ -669,7 +669,7 @@ std::ostream& operator<<(std::ostream& os, const OrderBook& ob) {
 
         // Colonne de Pool
         if (row == 0) {
-            a = "-- [ ORDER POOL ] --";
+            a = "-------- [ ORDER POOL ] --------";
         }
 
         else {
@@ -681,7 +681,7 @@ std::ostream& operator<<(std::ostream& os, const OrderBook& ob) {
 
         // Colonne des Buy
         if (row == 0) {
-            b = "-- [ BUY LEVELS ] --";
+            b = "-------- [ BUY LEVELS ] --------";
         }
 
         else {
@@ -695,7 +695,7 @@ std::ostream& operator<<(std::ostream& os, const OrderBook& ob) {
 
         // Colonne des Sell
         if (row == 0) {
-            c = "-- [ SELL LEVELS ] --";
+            c = "-------- [ SELL LEVELS ] --------";
         }
 
         else {
@@ -741,7 +741,7 @@ std::ostream& operator<<(std::ostream& os, const Trade& t) {
 
 // Affichage d'un TradeRepository
 std::ostream& operator<<(std::ostream& os, const TradeRepository& tr) {
-    os << "-- [ TRADE REPOSITORY ] --" << std::endl;
+    os << "-------- [ TRADE REPOSITORY ] --------" << std::endl;
     for (TradeId i = 0; i < MAX_TRADES; ++i) {
         os << i << ": ";
         const Trade* t = tr.get_trade(i);
