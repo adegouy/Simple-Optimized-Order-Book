@@ -9,7 +9,7 @@ Notre carnet d'ordres doit respecter les contraintes suivantes :
 - Accès à un ordre par son id en O(1) -> DONE
 - Accès au Best Bid en O(1) -> DONE
 - Accès au Best Ask en O(1) -> DONE
-- Ajout d'un ordre en O(1) amorti (possible ?) -> je dois encore calculer la complexité mais elle est < à O(N) pour sûr. Dans le meilleur cas, on est en O(1) et dans certains cas il faut faire un petit parcours d'un sous ensemble de N que je dois quantifier.
+- Ajout d'un ordre en O(1) amorti -> je dois encore calculer la complexité mais elle est < à O(N) pour sûr. Dans le meilleur cas, on est en O(1) et dans certains cas il faut faire un petit parcours d'un sous ensemble de N que je dois quantifier.
 - Cancel d'un ordre en O(1) -> DONE
 - Execute via un matching Engine en O(1) -> DONE
 - Accès au volume total par niveau de prix en O(1) -> DONE
@@ -36,16 +36,25 @@ En revanche, il existe un excepion : l'ajout. En effet, dans certains cas, lors 
 # Roadmap
 Prochaines étapes : 
 - testing approfondi de Add et Cancel avec des jeux de test
-- quantifier les complexités de Add et Cancel
+- quantifier la complexité de Add
 - OrderBook::get_volume(Price, Side);
 
 # Analyse des complexités
-## Complexité algorithmique du ADD
-
 Les opérations d'accès par id, d'accès aux Bests, de cancel et d'execution sont en O(1).
-En revanche, la question se pose pour l'ajout d'un ordre.
 
-TODO
+## Complexité algorithmique du ADD
+En revanche, comme vu plus haut, la question se pose pour l'ajout d'un ordre.
+
+En temps moyen / amorti, l'ajout est en O(1). En revanche, il existe certains cas où l'ajout se fait en O(P), P étant le nombre maximal de niveaux de prix.
+
+•	insertion dans la pool : O(1)
+•	chaînage de l'ordre dans son PriceLevel (ajout en queue) : O(1)
+•	mise à jour des volumes : O(1)
+•	mettre à jour le chainage des PriceLevels entre eux. Pire cas : O(P) où P = nombre de niveaux de prix (MAX_PRICE_LEVEL + 1), en moyenne O(1).
+
+Quand on insère un nouvel PriceLevel il faut mettre à jour la liste chaînée des niveaux de prix (et mettre à jour les Best). Dans le cas précis ou un nouveau niveau de prix non actif doit devenir actif, et que ce dernier se retrouve borné par d'autres prix actifs, on doit donc parcourir les price levels actifs pour reconnecter les pointeurs — coût proportionnel au nombre de niveaux actifs parcourus. Si on traite P comme une variable, c’est O(P).
+
+Si le nouveau niveau de prix pas encore actif est < au plus petit ou > au plus grand, alors O(1). Si l'ordre qui arrive tombe sur un niveau de prix déjà actif, ce qui arrive souvent, alors O(1).
 
 ## Taille en mémoire vive
 
