@@ -31,7 +31,7 @@ En ce qui concerne les ordres eux même, ils sont stockés dans une pool alloué
 
 Ce schéma garanti que toutes les opérations puissent être faites en O(1).
 
-En revanche, il existe un excepion : l'ajout. En effet, dans certains cas, lors d"un ajout, il nous faut effectuer un parcours d'un sous ensemble de N. Je détaille le calcul de la complexité plus bas.
+En revanche, il existe un exception : l'ajout. En effet, dans certains cas, lors d"un ajout, il nous faut effectuer un parcours d'un sous ensemble de N. Je détaille le calcul de la complexité plus bas.
 
 # Roadmap
 Prochaines étapes : 
@@ -47,10 +47,10 @@ En revanche, comme vu plus haut, la question se pose pour l'ajout d'un ordre.
 
 En temps moyen / amorti, l'ajout est en O(1). En revanche, il existe certains cas où l'ajout se fait en O(P), P étant le nombre maximal de niveaux de prix.
 
-•	insertion dans la pool : O(1)
-•	chaînage de l'ordre dans son PriceLevel (ajout en queue) : O(1)
-•	mise à jour des volumes : O(1)
-•	mettre à jour le chainage des PriceLevels entre eux. Pire cas : O(P) où P = nombre de niveaux de prix (MAX_PRICE_LEVEL + 1), en moyenne O(1).
+- insertion dans la pool : O(1)
+- chaînage de l'ordre dans son PriceLevel (ajout en queue) : O(1)
+- mise à jour des volumes : O(1)
+- mettre à jour le chainage des PriceLevels entre eux. Pire cas : O(P) où P = nombre de niveaux de prix (MAX_PRICE_LEVEL + 1), en moyenne O(1).
 
 Quand on insère un nouvel PriceLevel il faut mettre à jour la liste chaînée des niveaux de prix (et mettre à jour les Best). Dans le cas précis ou un nouveau niveau de prix non actif doit devenir actif, et que ce dernier se retrouve borné par d'autres prix actifs, on doit donc parcourir les price levels actifs pour reconnecter les pointeurs — coût proportionnel au nombre de niveaux actifs parcourus. Si on traite P comme une variable, c’est O(P).
 
