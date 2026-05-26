@@ -19,7 +19,7 @@ TODO
 
 # Architecture
 La particularité de cette architecture est que nous indexons les ordres dans 2 tableaux triés par prix séparés (1 pour les Buy et 1 pour les Sell). Celà nous permet de savoir de manière instantannée quel est le meilleur Bid et le meilleur Ask. 
-Afin de ne pas avoir à faire d'allocations dynamiques dans le Hot Path, nous reservons donc d'avance deux grands tableaux contigus qui stocke les niveaux de prix actifs Buy et Sell. Chaque case de ces tableaux décrivent donc un niveau de prix.
+Afin de ne pas avoir à faire d'allocations dynamiques dans le Hot Path, nous reservons donc d'avance deux grands tableaux contigus qui stockent les niveaux de prix actifs Buy et Sell. Chaque case de ces tableaux décrivent donc un niveau de prix.
 
 Dans chaque niveau de prix, nous allons donc ranger les ordres, de manière chainée par priorité d'ordre d'arrivée. Ainsi, si j'ai un ordre **BUY 20 @ 10 EUR** puis **BUY 10 @ 10 EUR**, mon Price Level à 10 € ressemblera à ça :
 
