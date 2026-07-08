@@ -15,7 +15,14 @@ Notre carnet d'ordres doit respecter les contraintes suivantes :
 - Accès au volume total par niveau de prix en O(1) -> DONE
 
 # Matching Engine
-TODO
+Le principe de mon matching engine est très simple. Il va prendre le best bid, soit la demande d'achat qui a le prix le plus élevé et qui est la plus ancienne, puis il va le faire correspondre avec 1 ou plusieurs best ask pour satisfaire les quantités du bid. Le best ask est la demande de vente avec le prix le plus bas et étant le plus ancien. Si il n'y a pas assez de best ask pour satisfaire toute la quantité demandée par le best bid, le bid est quand même partiellement executé.
+L'algorithme se déroule comme suit : 
+
+Trouver le best bid
+Trouver le best ask
+Répète : 
+    Si le prix du best bid >= prix est ask alors on execute un trade entre les deux et on déduit les quantités respectives à ces sides.
+Tant que (la quantité restante pour satisfaire le best bid est superieure à 0 ET qu'il existe un best bid qui match)
 
 # Architecture
 La particularité de cette architecture est que nous indexons les ordres dans 2 tableaux triés par prix séparés (1 pour les Buy et 1 pour les Sell). Celà nous permet de savoir de manière instantannée quel est le meilleur Bid et le meilleur Ask. 
