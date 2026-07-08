@@ -216,7 +216,7 @@ ErrorCode OrderBook::cancel(OrderId _id) {
     return ErrorCode::no_error;
 }
 
-// execute TODO -> ajoute dans le TradeRepository les trades correspondants au macthing du best_bid avec 1 ou plusieurs best_ask
+// ajoute dans le TradeRepository les trades correspondants au macthing du best_bid avec 1 ou plusieurs best_ask
 //si le trade repos est nullptr alors le trade est quand même executé mais n'est pas loggé
 ErrorCode OrderBook::execute() {
 
