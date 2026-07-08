@@ -9,7 +9,7 @@ Notre carnet d'ordres doit respecter les contraintes suivantes :
 - Accès à un ordre par son id en O(1) -> DONE
 - Accès au Best Bid en O(1) -> DONE
 - Accès au Best Ask en O(1) -> DONE
-- Ajout d'un ordre en O(1) amorti -> je dois encore calculer la complexité mais elle est < à O(N) pour sûr. Dans le meilleur cas, on est en O(1) et dans certains cas il faut faire un petit parcours d'un sous ensemble de N que je dois quantifier.
+- Ajout d'un ordre en O(1) amorti -> DONE en O(1) amorti, et en pire cas O(P), où P est le nombre de niveaux de prix
 - Cancel d'un ordre en O(1) -> DONE
 - Execute via un matching Engine en O(1) -> DONE
 - Accès au volume total par niveau de prix en O(1) -> DONE
@@ -77,3 +77,6 @@ Si l'on considère :
 La taille en RAM de notre architecture est alors de **48X + 80P + 40 octets**.
 
 Soit par exemple pour **1 milliard d'ordres** par jours et **1 million de niveaux de prix**, il nous faudrait alors : 48 080 000 040 octets soit **48 Go de RAM**.
+
+Il semblerait que ces ordres de grandeur soient réalistes en termes de nombre d'ordre. Celà dépend évidement beaucoup du type d'actif et du marché mais reste réaliste. Par exemple sur Euronext pour des grandes valeurs (CAC40), on parle de plusieurs millions par jour).
+En ce qui concerne le nombre de niveaux de prix, certaines places de marché empèche le passage d'ordre à des prix trop eloignés du prix moyen d'ouverture de ce que je comprends. Ce qui fixe donc de manière finie le nombre de niveaux de prix possibles. 
