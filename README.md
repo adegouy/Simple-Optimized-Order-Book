@@ -76,7 +76,7 @@ Si l'on considère :
 
 La taille en RAM de notre architecture est alors de **48X + 80P + 40 octets**.
 
-Soit par exemple pour **1 milliard d'ordres** par jours et **1 million de niveaux de prix**, il nous faudrait alors : 48 080 000 040 octets soit **48 Go de RAM**.
+Soit par exemple pour **1 milliard d'ordres** par jour et **1 million de niveaux de prix**, il nous faudrait alors : 48 080 000 040 octets soit **48 Go de RAM**.
 
-Il semblerait que ces ordres de grandeur soient réalistes en termes de nombre d'ordre. Celà dépend évidement beaucoup du type d'actif et du marché mais reste réaliste. Par exemple sur Euronext pour des grandes valeurs (CAC40), on parle de plusieurs millions par jour).
-En ce qui concerne le nombre de niveaux de prix, certaines places de marché empèche le passage d'ordre à des prix trop eloignés du prix moyen d'ouverture de ce que je comprends. Ce qui fixe donc de manière finie le nombre de niveaux de prix possibles. 
+Il semblerait que ces ordres de grandeur soient réalistes. Ces derniers peuvent varier en fonction du type d'actif et du marché mais globalement celà reste plausible. Par exemple sur Euronext pour des grandes valeurs (CAC40), on parle de plusieurs millions d'ordres par jour).
+En ce qui concerne le nombre de niveaux de prix, certaines places de marché empèche le passage d'ordre à des prix trop eloignés du prix moyen d'ouverture de ce que je comprends. Ce qui fixe donc de manière finie le nombre de niveaux de prix possibles. Ainsi, il semblerait que mon architecture puisse être utilisée en pratique dans des conditions réelles.
