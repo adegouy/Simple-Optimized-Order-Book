@@ -43,8 +43,8 @@ En revanche, il existe un exception : l'ajout. En effet, dans certains cas, lors
 # Roadmap
 Prochaines étapes : 
 - testing approfondi de Add et Cancel avec des jeux de test
-- quantifier la complexité de Add
-- OrderBook::get_volume(Price, Side);
+- Séparer les classes des fichiers respectifs
+- Utiliser des optionals en valeur de retour
 
 # Analyse des complexités
 Les opérations d'accès par id, d'accès aux Bests, de cancel et d'execution sont en O(1).
