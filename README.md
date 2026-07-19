@@ -65,10 +65,10 @@ Si le nouveau niveau de prix pas encore actif est inférieur au plus petit ou su
 
 ## Taille en mémoire vive
 
-**Pour l'OrderBook:**
-Ordre = 48 octets
-PriceLevel = 40 octets
-OrderBook (sans les tableaux contenant les ordres et les niveaux de prix) = 40 octets
+**Pour l'OrderBook:**  
+Ordre = 48 octets  
+PriceLevel = 40 octets  
+OrderBook (sans les tableaux contenant les ordres et les niveaux de prix) = 40 octets  
 
 Si l'on considère : 
 - N le nombre maximal d'ordres
