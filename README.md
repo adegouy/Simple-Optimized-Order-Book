@@ -9,7 +9,7 @@ Notre carnet d'ordres doit respecter les contraintes suivantes :
 - Accès à un ordre par son id en O(1) -> DONE
 - Accès au Best Bid en O(1) -> DONE
 - Accès au Best Ask en O(1) -> DONE
-- Ajout d'un ordre en O(1) amorti -> je dois encore calculer la complexité mais elle est < à O(N) pour sûr. Dans le meilleur cas, on est en O(1) et dans certains cas il faut faire un petit parcours d'un sous ensemble de N que je dois quantifier.
+- Ajout d'un ordre en O(1) amorti -> DONE en O(1) amorti, et en pire cas O(P), où P est le nombre de niveaux de prix
 - Cancel d'un ordre en O(1) -> DONE
 - Execute via un matching Engine en O(1) -> DONE
 - Accès au volume total par niveau de prix en O(1) -> DONE
@@ -59,16 +59,16 @@ En temps moyen / amorti, l'ajout est en O(1). En revanche, il existe certains ca
 - mise à jour des volumes : O(1)
 - mettre à jour le chainage des PriceLevels entre eux. Pire cas : O(P) où P = nombre de niveaux de prix (MAX_PRICE_LEVEL + 1), en moyenne O(1).
 
-Quand on insère un nouvel PriceLevel il faut mettre à jour la liste chaînée des niveaux de prix (et mettre à jour les Best). Dans le cas précis ou un nouveau niveau de prix non actif doit devenir actif, et que ce dernier se retrouve borné par d'autres prix actifs, on doit donc parcourir les price levels actifs pour reconnecter les pointeurs — coût proportionnel au nombre de niveaux actifs parcourus. Si on traite P comme une variable, c’est O(P).
+Quand on insère un nouveau PriceLevel il faut mettre à jour la liste chaînée des niveaux de prix (et mettre à jour les Best). Dans le cas précis ou un nouveau niveau de prix non actif doit devenir actif, et que ce dernier se retrouve borné par d'autres prix actifs, on doit donc parcourir les price levels actifs pour reconnecter les pointeurs, coût proportionnel au nombre de niveaux actifs parcourus. Si on traite P comme une variable, c’est donc O(P). Si ce cas arrivera beaucoup à l'ouverture des marchés, il peut devenir très rare par la suite. Plus il y a d'ordres, moins il a de chance d'arriver. De plus, nous pouvons considérer que les acteurs passent des ordres autour de la moyenne journalière. Il y a donc de fortes chances que le PriceLevel soit déjà utilisé quand un ordre est passé.
 
-Si le nouveau niveau de prix pas encore actif est < au plus petit ou > au plus grand, alors O(1). Si l'ordre qui arrive tombe sur un niveau de prix déjà actif, ce qui arrive souvent, alors O(1).
+Si le nouveau niveau de prix pas encore actif est inférieur au plus petit ou supérieur au plus grand, alors l'opréation se fait en O(1). Si l'ordre qui arrive tombe sur un niveau de prix déjà actif, ce qui arrive souvent donc, alors c'est O(1).
 
 ## Taille en mémoire vive
 
-**Pour l'OrderBook:**
-Ordre = 48 octets
-PriceLevel = 40 octets
-OrderBook (sans les tableaux contenant les ordres et les niveaux de prix) = 40 octets
+**Pour l'OrderBook:**  
+Ordre = 48 octets  
+PriceLevel = 40 octets  
+OrderBook (sans les tableaux contenant les ordres et les niveaux de prix) = 40 octets  
 
 Si l'on considère : 
 - N le nombre maximal d'ordres
@@ -76,4 +76,7 @@ Si l'on considère :
 
 La taille en RAM de notre architecture est alors de **48X + 80P + 40 octets**.
 
-Soit par exemple pour **1 milliard d'ordres** par jours et **1 million de niveaux de prix**, il nous faudrait alors : 48 080 000 040 octets soit **48 Go de RAM**.
+Soit par exemple pour **1 milliard d'ordres** par jour et **1 million de niveaux de prix**, il nous faudrait alors : 48 080 000 040 octets soit **48 Go de RAM**.
+
+Il semblerait que ces ordres de grandeur soient réalistes. Ces derniers peuvent varier en fonction du type d'actif et du marché mais globalement celà reste plausible. Par exemple sur Euronext pour des grandes valeurs (CAC40), on parle de plusieurs millions d'ordres par jour).
+En ce qui concerne le nombre de niveaux de prix, certaines places de marché empèche le passage d'ordre à des prix trop eloignés du prix moyen d'ouverture de ce que je comprends. Ce qui fixe donc de manière finie le nombre de niveaux de prix possibles. Ainsi, il semblerait que mon architecture puisse être utilisée en pratique dans des conditions réelles.
