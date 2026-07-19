@@ -220,6 +220,9 @@ public:
     const PriceLevel* get_sell_price_levels_head() const;
     const PriceLevel* get_buy_price_levels_head() const;
 
+    // Retourne le Volume pour le prix et le side demandés
+    Quantity get_volume(Price _price, Side _side) const;
+
 private:
 
     //SELL ADD : On met à jour le PriceLevel et son Volume

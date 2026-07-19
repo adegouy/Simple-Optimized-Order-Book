@@ -596,6 +596,18 @@ inline void OrderBook::update_best_bid_when_adding_buy_order(Price _price_tick) 
     n_plus_1->prev = &buy_levels[_price_tick];
 }
 
+// Retourne le Volume pour le prix et le side demandés
+Quantity OrderBook::get_volume(Price _price, Side _side) const {
+
+    //prix au delà du prix max
+    if (_price > MAX_PRICE_LEVEL) return 0;
+
+    if (_side == Side::buy) return buy_levels[_price].get_volume();
+    else if (_side == Side::sell) return sell_levels[_price].get_volume();
+
+    return 0;
+}
+
 // Affichage d'un ordre au format "[Side Quantity @ PriceTick EUR]"
 std::ostream& operator<<(std::ostream& os, const Order& o) {
     if (o.get_side() == Side::none) {
