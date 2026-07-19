@@ -59,9 +59,9 @@ En temps moyen / amorti, l'ajout est en O(1). En revanche, il existe certains ca
 - mise à jour des volumes : O(1)
 - mettre à jour le chainage des PriceLevels entre eux. Pire cas : O(P) où P = nombre de niveaux de prix (MAX_PRICE_LEVEL + 1), en moyenne O(1).
 
-Quand on insère un nouvel PriceLevel il faut mettre à jour la liste chaînée des niveaux de prix (et mettre à jour les Best). Dans le cas précis ou un nouveau niveau de prix non actif doit devenir actif, et que ce dernier se retrouve borné par d'autres prix actifs, on doit donc parcourir les price levels actifs pour reconnecter les pointeurs — coût proportionnel au nombre de niveaux actifs parcourus. Si on traite P comme une variable, c’est O(P).
+Quand on insère un nouveau PriceLevel il faut mettre à jour la liste chaînée des niveaux de prix (et mettre à jour les Best). Dans le cas précis ou un nouveau niveau de prix non actif doit devenir actif, et que ce dernier se retrouve borné par d'autres prix actifs, on doit donc parcourir les price levels actifs pour reconnecter les pointeurs, coût proportionnel au nombre de niveaux actifs parcourus. Si on traite P comme une variable, c’est donc O(P). Si ce cas arrivera beaucoup à l'ouverture des marchés, il peut devenir très rare par la suite. Plus il y a d'ordres, moins il a de chance d'arriver. De plus, nous pouvons considérer que les acteurs passent des ordres autour de la moyenne journalière. Il y a donc de fortes chances que le PriceLevel soit déjà utilisé quand un ordre est passé.
 
-Si le nouveau niveau de prix pas encore actif est < au plus petit ou > au plus grand, alors O(1). Si l'ordre qui arrive tombe sur un niveau de prix déjà actif, ce qui arrive souvent, alors O(1).
+Si le nouveau niveau de prix pas encore actif est inférieur au plus petit ou supérieur au plus grand, alors l'opréation se fait en O(1). Si l'ordre qui arrive tombe sur un niveau de prix déjà actif, ce qui arrive souvent donc, alors c'est O(1).
 
 ## Taille en mémoire vive
 
