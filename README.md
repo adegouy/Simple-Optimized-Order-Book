@@ -46,6 +46,7 @@ Prochaines étapes :
 - testing approfondi de Add et Cancel avec des jeux de test
 - Séparer les classes des fichiers respectifs
 - Utiliser des optionals en valeur de retour
+- Rendre RAII partout
 
 # Analyse des complexités
 Les opérations d'accès par id, d'accès aux Bests, de cancel et d'execution sont en O(1).
