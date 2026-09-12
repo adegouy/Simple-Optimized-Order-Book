@@ -46,7 +46,8 @@ Prochaines étapes :
 - testing approfondi de Add et Cancel avec des jeux de test
 - Séparer les classes des fichiers respectifs
 - Utiliser des optionals en valeur de retour
-- Rendre RAII partout
+- Rendre RAII
+- Analyse de la performance cache
 
 # Analyse des complexités
 Les opérations d'accès par id, d'accès aux Bests, de cancel et d'execution sont en O(1).
@@ -82,3 +83,6 @@ Soit par exemple pour **1 milliard d'ordres** par jour et **1 million de niveaux
 
 Il semblerait que ces ordres de grandeur soient réalistes. Ces derniers peuvent varier en fonction du type d'actif et du marché mais globalement celà reste plausible. Par exemple sur Euronext pour des grandes valeurs (CAC40), on parle de plusieurs millions d'ordres par jour).
 En ce qui concerne le nombre de niveaux de prix, certaines places de marché empèche le passage d'ordre à des prix trop eloignés du prix moyen d'ouverture de ce que je comprends. Ce qui fixe donc de manière finie le nombre de niveaux de prix possibles. Ainsi, il semblerait que mon architecture puisse être utilisée en pratique dans des conditions réelles.
+
+## Cache
+Todo : analyse approfondie des cache misses
